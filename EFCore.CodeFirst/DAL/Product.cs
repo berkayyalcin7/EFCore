@@ -13,15 +13,38 @@ namespace EFCore.CodeFirst.DAL
     //[Table("ProductTbl",Schema ="Products")]
 
     // Virtual SQL serverdan aldığı dataları basıyor .. LazyLoading de Virtual keywordlerine ihtiyacımız var.
+
+
+    // Primary Key  Clustured Index , Foreign Key Non Clustured Index olarak oluştururken bize gelir
+
+
+    [Index(nameof(Name))]
+    // Barcode ve URL e göre Index oluşturur.
+    [Index(nameof(ProductUrl),nameof(Barcode))]
     public class Product
     {
+        #region Index Örnek Açıklama
+        // ilk olarak index tablosuna gidiyor kalem1 satırnın yerini buluyor
+        // daha sonra asıl product tablosuna gidip id,name,url,stock bütün bilgileri alıyor .
+        // Sadece Name alanını çekseydik sorgu daha hızlı çalışacaktı. 
+        // context.products.where(x=>x.name=kalem).first()
+
+        #endregion
+
+
+
         public int Id { get; set; }
 
         // Tipi ve Kolon adını Annotations üzerinden de belirtebiliriz. ! Order çalışması için Tablonun sıfırdan oluşması gerekiyor !
         //[Column("Name2",TypeName ="nvarchar(100)",Order =1)]
         //[StringLength(100,MinimumLength =2)]
+        [Unicode(false)] // varchar olarak işaretlenir ...
         public string Name { get; set; }
         public int Stock { get; set; }
+
+        [Column(TypeName ="varchar(255)")]
+        public string ProductUrl { get; set; }
+
         public int Barcode { get; set; }
 
         // Virgülden sonra kaç karakter olacağını bleirtiyoruz
@@ -34,8 +57,8 @@ namespace EFCore.CodeFirst.DAL
         public DateTime? CreatedDate { get; set; } = DateTime.Now;
 
         // Eklerken güncellerken VT'de kendimiz yapıyoruz burada yapılacak işlemler vt ye yansımayacak.
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public DateTime LastAccessDate { get; set; }
+        //[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime? LastAccessDate { get; set; }
 
         public int Kdv { get; set; }
 

@@ -4,6 +4,7 @@ using EFCore.CodeFirst.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFCore.CodeFirst.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220612204439_EditEntities")]
+    partial class EditEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,16 +84,12 @@ namespace EFCore.CodeFirst.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastAccessDate")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(900)");
-
-                    b.Property<string>("ProductUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
@@ -110,15 +108,7 @@ namespace EFCore.CodeFirst.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("Name");
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Name"), new[] { "UnitPrice", "Stock" });
-
-                    b.HasIndex("ProductUrl", "Barcode");
-
                     b.ToTable("Products");
-
-                    b.HasCheckConstraint("DateCheck", "[CreatedDate]>[LastAccessDate]");
                 });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.ProductFeature", b =>
@@ -139,28 +129,6 @@ namespace EFCore.CodeFirst.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProductFeatures");
-                });
-
-            modelBuilder.Entity("EFCore.CodeFirst.DAL.ProductFull", b =>
-                {
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Product_Id")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.ToTable("ProductFulls");
                 });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.Student", b =>
@@ -198,23 +166,6 @@ namespace EFCore.CodeFirst.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teachers");
-                });
-
-            modelBuilder.Entity("EFCore.CodeFirst.DAL.Users", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("StudentTeacher", b =>

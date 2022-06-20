@@ -4,7 +4,7 @@
 
 namespace EFCore.CodeFirst.Migrations
 {
-    public partial class PropertyRelatedChange : Migration
+    public partial class TPTypeV2 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

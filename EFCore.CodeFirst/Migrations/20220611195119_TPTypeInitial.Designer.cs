@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFCore.CodeFirst.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220521180244_DbGeneration")]
-    partial class DbGeneration
+    [Migration("20220611195119_TPTypeInitial")]
+    partial class TPTypeInitial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,27 @@ namespace EFCore.CodeFirst.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("EFCore.CodeFirst.DAL.BasePerson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Persons", (string)null);
+                });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.Category", b =>
                 {
@@ -75,10 +96,12 @@ namespace EFCore.CodeFirst.Migrations
 
                     b.Property<decimal>("TotalPrice")
                         .ValueGeneratedOnAddOrUpdate()
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasComputedColumnSql("[UnitPrice]*[Kdv]");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -160,6 +183,27 @@ namespace EFCore.CodeFirst.Migrations
                     b.ToTable("StudentTeacher");
                 });
 
+            modelBuilder.Entity("EFCore.CodeFirst.DAL.Employee", b =>
+                {
+                    b.HasBaseType("EFCore.CodeFirst.DAL.BasePerson");
+
+                    b.Property<decimal>("Salary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.ToTable("Employees", (string)null);
+                });
+
+            modelBuilder.Entity("EFCore.CodeFirst.DAL.Manager", b =>
+                {
+                    b.HasBaseType("EFCore.CodeFirst.DAL.BasePerson");
+
+                    b.Property<int>("Grade")
+                        .HasColumnType("int");
+
+                    b.ToTable("Managers", (string)null);
+                });
+
             modelBuilder.Entity("EFCore.CodeFirst.DAL.Product", b =>
                 {
                     b.HasOne("EFCore.CodeFirst.DAL.Category", "Category")
@@ -174,8 +218,8 @@ namespace EFCore.CodeFirst.Migrations
             modelBuilder.Entity("EFCore.CodeFirst.DAL.ProductFeature", b =>
                 {
                     b.HasOne("EFCore.CodeFirst.DAL.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("Id")
+                        .WithOne("ProductFeature")
+                        .HasForeignKey("EFCore.CodeFirst.DAL.ProductFeature", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -197,9 +241,33 @@ namespace EFCore.CodeFirst.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("EFCore.CodeFirst.DAL.Employee", b =>
+                {
+                    b.HasOne("EFCore.CodeFirst.DAL.BasePerson", null)
+                        .WithOne()
+                        .HasForeignKey("EFCore.CodeFirst.DAL.Employee", "Id")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EFCore.CodeFirst.DAL.Manager", b =>
+                {
+                    b.HasOne("EFCore.CodeFirst.DAL.BasePerson", null)
+                        .WithOne()
+                        .HasForeignKey("EFCore.CodeFirst.DAL.Manager", "Id")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("EFCore.CodeFirst.DAL.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("EFCore.CodeFirst.DAL.Product", b =>
+                {
+                    b.Navigation("ProductFeature")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -4,7 +4,7 @@
 
 namespace EFCore.CodeFirst.Migrations
 {
-    public partial class DataAnnotationPrecision : Migration
+    public partial class NewUser : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

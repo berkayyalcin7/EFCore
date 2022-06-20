@@ -4,6 +4,7 @@ using EFCore.CodeFirst.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFCore.CodeFirst.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220611195318_TPTypeV2")]
+    partial class TPTypeV2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,17 +83,13 @@ namespace EFCore.CodeFirst.Migrations
                     b.Property<int>("Kdv")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("LastAccessDate")
+                    b.Property<DateTime>("LastAccessDate")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(900)");
-
-                    b.Property<string>("ProductUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
@@ -110,15 +108,7 @@ namespace EFCore.CodeFirst.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("Name");
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Name"), new[] { "UnitPrice", "Stock" });
-
-                    b.HasIndex("ProductUrl", "Barcode");
-
                     b.ToTable("Products");
-
-                    b.HasCheckConstraint("DateCheck", "[CreatedDate]>[LastAccessDate]");
                 });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.ProductFeature", b =>
@@ -139,28 +129,6 @@ namespace EFCore.CodeFirst.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProductFeatures");
-                });
-
-            modelBuilder.Entity("EFCore.CodeFirst.DAL.ProductFull", b =>
-                {
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Product_Id")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.ToTable("ProductFulls");
                 });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.Student", b =>
@@ -198,23 +166,6 @@ namespace EFCore.CodeFirst.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teachers");
-                });
-
-            modelBuilder.Entity("EFCore.CodeFirst.DAL.Users", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("StudentTeacher", b =>
@@ -297,28 +248,6 @@ namespace EFCore.CodeFirst.Migrations
                         .HasForeignKey("EFCore.CodeFirst.DAL.Employee", "Id")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
-
-                    b.OwnsOne("EFCore.CodeFirst.DAL.OwnedType", "OwnedType", b1 =>
-                        {
-                            b1.Property<int>("EmployeeId")
-                                .HasColumnType("int");
-
-                            b1.Property<DateTime>("CreatedTime")
-                                .HasColumnType("datetime2");
-
-                            b1.Property<DateTime?>("ModifiedTime")
-                                .HasColumnType("datetime2");
-
-                            b1.HasKey("EmployeeId");
-
-                            b1.ToTable("Employees");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId");
-                        });
-
-                    b.Navigation("OwnedType")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.Manager", b =>
@@ -327,30 +256,6 @@ namespace EFCore.CodeFirst.Migrations
                         .WithOne()
                         .HasForeignKey("EFCore.CodeFirst.DAL.Manager", "Id")
                         .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-
-                    b.OwnsOne("EFCore.CodeFirst.DAL.OwnedType", "OwnedType", b1 =>
-                        {
-                            b1.Property<int>("ManagerId")
-                                .HasColumnType("int");
-
-                            b1.Property<DateTime>("CreatedTime")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("CreatedTime");
-
-                            b1.Property<DateTime?>("ModifiedTime")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("ModifiedTime");
-
-                            b1.HasKey("ManagerId");
-
-                            b1.ToTable("Managers");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ManagerId");
-                        });
-
-                    b.Navigation("OwnedType")
                         .IsRequired();
                 });
 

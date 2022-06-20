@@ -121,17 +121,21 @@ using (var context = new AppDbContext())
 
     //var category = new Category() { Name = "Araç Gereçler" };
 
-    //var newProduct = new Product() { Name = "Kalem 1", UnitPrice = 100, Stock = 300, Barcode = 123, Category = category };
+    //var newProduct = new Product() { Name = "Kalem 1", UnitPrice = 100, Stock = 300, Barcode = 123,
+    //    Kdv = 18,
+    //    Category = category,ProductFeature=new() { 
+    //Height=15,Width=20,Size="S"
+
+    //}};
 
     //context.Add(newProduct);
-
-
     #region One to One
     // Product - > Parent
     // ProductFeature -> Child nesne
 
     //var category = context.Categories.First();
-    //var product = new Product { Name = "Silgi-2", UnitPrice = 200, Stock = 100, Barcode = 150541,CreatedDate=DateTime.UtcNow,Category=category,ProductFeature=new() { 
+    //var product = new Product { Name = "Silgi-2", UnitPrice = 200, Stock = 100, Barcode = 150541,Kdv=18,
+    // Category=category,ProductFeature=new() { 
     //Height =100,Width=100,Size="M"
     //}};
 
@@ -209,12 +213,58 @@ using (var context = new AppDbContext())
     //}
     #endregion
 
-
-
     #region Lazy Loading -> Virtual Keywordü Property için gerekli   
-    var category = context.Categories.First();
+    //var category = context.Categories.First();
     // Kategoriye bağlı productlar
-    var products = category.Products;
+    //var products = category.Products;
+    #endregion
+
+    #region TBH ( Table Per Hierarchy)
+    //context.Persons.Add(new Manager() { FirstName = "Berkay", LastName = "Yalçın", Grade = 1 });
+    //context.Persons.Add(new Employee() { FirstName = "Ahmet", LastName = "Özgür", Salary = 1500 });
+    //var managers = context.Managers.ToList();
+    //var employees = context.Employees.ToList();
+
+    //// Peki Context üzerinden Person 'ı çekmeye kalkarsak -> Hem Manager hem Employee verilerini de getirecek
+    //var person = context.Persons.ToList();
+    #endregion
+
+    #region TPT ( Table Per Type)
+    // Ekleme işlemi aynı şekilde oluyor . ModelBuilder üzerinden ToTable() kullanarak bütün tabloları oluşturuyoruz
+    // Aralarındaki ilişkiyi EFCore otomatik olarak yansıtıyor . Diagram üzerinden görülebilir.
+    // Base değerleri Base Tablosuna Diğer tablolara özgün bilgileri -> o tablolara kaydediyor
+    #endregion
+
+    #region Owned Type Entities 
+    //OnModel Creating ve Entityler üzerinde işlendi.
+    #endregion
+
+    #region KeylessEntity Tipleri -> 
+    //Bazı Entitylerde Primary Key olmayabilir . Bunu EFCore'a bildirmek lazım .Keyless'lar CRUD edilemez çünkü DbContext tarafından Track Edilemez.
+    // PK içermeyen DbDeki viewları maplemek istersek kullanabiliriz.
+    // Raw SQL cümleciklerinden dönen datayı maplemek istersek kullanabiliriz.
+
+
+    //    var productFulls = context.ProductFulls.FromSqlRaw(@"select p.Id 'Product_Id',c.Name 'CategoryName', p.Name 'ProductName',p.UnitPrice,pf.Height from Products p
+    //join ProductFeatures pf on p.Id=pf.Id
+    //join Categories c on p.CategoryId=c.Id").ToList();
+    #endregion
+
+
+    #region Client vs Server Evelatuion
+    //context.Users.Add(new Users() { Phone = "05385282234" });
+    //context.Users.Add(new Users() { Phone = "05396586136" });
+
+
+    // EfCore -> Custom metodu SQL cümleciğine döndüremez önce Listeyi çekip daha sonra işlemi yapmamız lazım. Memorye önceden alacağız
+    //var usersPhone = context.Users.Where(x => FormatPhone(x.Phone) == "5385282234").ToList();
+
+    // Hatasız gelicek ama Formatsız şekilde phone basılacak
+    //var usersPhone = context.Users.ToList().Where(x => FormatPhone(x.Phone) == "5385282234");
+
+    //var usersPhone = context.Users.ToList().Select(x=> new { Phone=FormatPhone(x.Phone)}).ToList();
+
+    //Console.WriteLine("İşlem Başarılı");
     #endregion
 
 
@@ -225,4 +275,9 @@ using (var context = new AppDbContext())
 
 
 
+}
+
+string FormatPhone(string phone)
+{
+    return phone.Substring(1, phone.Length - 1);
 }

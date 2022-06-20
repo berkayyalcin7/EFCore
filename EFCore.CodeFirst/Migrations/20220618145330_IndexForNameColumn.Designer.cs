@@ -4,6 +4,7 @@ using EFCore.CodeFirst.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFCore.CodeFirst.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220618145330_IndexForNameColumn")]
+    partial class IndexForNameColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,13 +114,7 @@ namespace EFCore.CodeFirst.Migrations
 
                     b.HasIndex("Name");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Name"), new[] { "UnitPrice", "Stock" });
-
-                    b.HasIndex("ProductUrl", "Barcode");
-
                     b.ToTable("Products");
-
-                    b.HasCheckConstraint("DateCheck", "[CreatedDate]>[LastAccessDate]");
                 });
 
             modelBuilder.Entity("EFCore.CodeFirst.DAL.ProductFeature", b =>
@@ -198,23 +194,6 @@ namespace EFCore.CodeFirst.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teachers");
-                });
-
-            modelBuilder.Entity("EFCore.CodeFirst.DAL.Users", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("StudentTeacher", b =>

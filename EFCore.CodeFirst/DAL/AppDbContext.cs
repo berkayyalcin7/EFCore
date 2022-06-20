@@ -13,12 +13,22 @@ namespace EFCore.CodeFirst.DAL
     {
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
-
         public DbSet<Student> Students { get; set; }
-
         public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<ProductFeature>? ProductFeatures { get; set; }
+        public DbSet<Manager> Managers { get; set; }
+        public DbSet<Employee> Employees { get; set; }
 
-        public DbSet<ProductFeature> ProductFeatures { get; set; }
+
+        // BasePerson' ı miras alan Sınıfları tek bir sınıf halinde VT'de topluyor.
+        // Ek olarak Discriminator alanı oluşturuyor . Managers ve Employees alanının farkını belirtmek için
+        public DbSet<BasePerson> Persons { get; set; }
+
+        // Keyless Entity
+        public DbSet<ProductFull> ProductFulls { get; set; }
+
+        public DbSet<Users> Users { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Sadece Console'da bu ayarı yapıyoruz. Migrationda ConStr okuması için
@@ -27,7 +37,8 @@ namespace EFCore.CodeFirst.DAL
 
             //Loglama ve Lazy Loading
             // Trace , Debug , Info , Warning , Error , Critical
-            optionsBuilder.LogTo(Console.WriteLine,LogLevel.Information).UseLazyLoadingProxies().UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
+            // LogTo(Console.WriteLine,LogLevel.Information).UseLazyLoadingProxies().
+            optionsBuilder.UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
         
         }
 
@@ -81,6 +92,30 @@ namespace EFCore.CodeFirst.DAL
             // UnitPrice ve KDV alanını çarp TotalPrice'a yaz. 
             modelBuilder.Entity<Product>().Property(x => x.TotalPrice).HasComputedColumnSql("[UnitPrice]*[Kdv]");
 
+
+            // TPT davranışı için -> Her Entity' karşılık bi Tablo oluşturuyor.
+            modelBuilder.Entity<BasePerson>().ToTable("Persons");
+            modelBuilder.Entity<Employee>().ToTable("Employees");
+
+
+            // Owned Type -> Burada Property Kolon isimlerinide düzenledik.
+            modelBuilder.Entity<Manager>().ToTable("Managers").OwnsOne(x => x.OwnedType, x =>
+            {
+                x.Property(x => x.CreatedTime).HasColumnName("CreatedTime");
+                x.Property(x => x.ModifiedTime).HasColumnName("ModifiedTime");
+            });
+
+            // Include dediğimizde Index tablosunda UnitPrice ve Stock datasını da tutacak. Sorgulama performansı arttırıyor .
+            // Disk alanı maliyetini arttırır.
+
+            modelBuilder.Entity<Product>().HasIndex(x => x.Name).IncludeProperties(x=> new { x.UnitPrice,x.Stock });
+
+            // Kısıtlamalar -> Örnek olarak
+            modelBuilder.Entity<Product>().HasCheckConstraint("DateCheck","[CreatedDate]>[LastAccessDate]");
+
+            // Keyless Entity
+
+            //modelBuilder.Entity<ProductFull>().HasNoKey();
 
             base.OnModelCreating(modelBuilder);
         }
