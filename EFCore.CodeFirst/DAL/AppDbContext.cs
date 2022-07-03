@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EFCore.CodeFirst.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,6 +20,9 @@ namespace EFCore.CodeFirst.DAL
         public DbSet<Manager> Managers { get; set; }
         public DbSet<Employee> Employees { get; set; }
 
+        // Veritabanına yansımasını engellemek için Migration içindeki Kodları temizlememiz gerekiyor 
+        public DbSet<ProductEssential> ProductEssentials { get; set; }
+
 
         // BasePerson' ı miras alan Sınıfları tek bir sınıf halinde VT'de topluyor.
         // Ek olarak Discriminator alanı oluşturuyor . Managers ve Employees alanının farkını belirtmek için
@@ -26,6 +30,9 @@ namespace EFCore.CodeFirst.DAL
 
         // Keyless Entity
         public DbSet<ProductFull> ProductFulls { get; set; }
+
+        // View Tablomuzu tanımlıyoruz
+        public DbSet<ProductView> ProductView { get; set; }
 
         public DbSet<Users> Users { get; set; }
 
@@ -37,8 +44,8 @@ namespace EFCore.CodeFirst.DAL
 
             //Loglama ve Lazy Loading
             // Trace , Debug , Info , Warning , Error , Critical
-            // LogTo(Console.WriteLine,LogLevel.Information).UseLazyLoadingProxies().
-            optionsBuilder.UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
+
+            optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information).UseLazyLoadingProxies().UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
         
         }
 
@@ -116,6 +123,16 @@ namespace EFCore.CodeFirst.DAL
             // Keyless Entity
 
             //modelBuilder.Entity<ProductFull>().HasNoKey();
+
+            // ToList() dediğimizde Sql bu query'yi çağıracaktır.
+            modelBuilder.Entity<ProductEssential>().ToSqlQuery("Select Id,Name,UnitPrice From Products");
+
+            // ToView ile View'ı çağırıyoruz. HasNoKey olarak işaretliyoruz.
+            modelBuilder.Entity<ProductView>().HasNoKey().ToView("ProductWithFeature");
+
+            //Default değeri false
+            modelBuilder.Entity<Product>().Property(x => x.IsDeleted).HasDefaultValue(false);
+
 
             base.OnModelCreating(modelBuilder);
         }

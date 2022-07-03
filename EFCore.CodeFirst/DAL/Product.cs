@@ -67,6 +67,8 @@ namespace EFCore.CodeFirst.DAL
         [Precision(18, 2)]
         public decimal TotalPrice { get; set; }
 
+        public bool IsDeleted { get; set; }
+
         public int CategoryId { get; set; }
         //Navigation property -> CategoryId ismi farklı bi isimde olsa idi Annotationda bunu belirtildik.
         //[ForeignKey("CategoryId")]

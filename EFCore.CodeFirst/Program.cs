@@ -8,6 +8,14 @@ using Microsoft.EntityFrameworkCore;
 // AppSettings json'ı okunabilecek hale getiriyor. 
 DbInitializer.Build();
 
+//GetProducts(1, 1).ForEach(x =>
+//{
+//    Console.WriteLine($"{x.Id} - {x.Name}");
+//});
+
+//List<Product> GetProducts (int page,int pageSize)
+//{
+
 using (var context = new AppDbContext())
 {
     #region State Tracking işlemleri
@@ -267,8 +275,127 @@ using (var context = new AppDbContext())
     //Console.WriteLine("İşlem Başarılı");
     #endregion
 
+    #region Join Yapıları
+
+    #region İkili Join
+    //  Products ile Join işlemi
+    //var result = context.Categories.Join(context.Products, x => x.Id, y => y.CategoryId, (c, p) => new
+    //{
+    //    CategoryName=c.Name,
+    //    ProductName=p.Name,
+    //    ProductPrice=p.UnitPrice
+    //}).ToList();
+
+    //var result2 = (from c in context.Categories join p in context.Products on c.Id equals p.CategoryId select p).ToList();
+
+    #endregion
+
+    #region 3 Tablolu Join
+    // 3 tablolu join
+    //var result = context.Categories
+    //    .Join(context.Products, x => x.Id, y => y.CategoryId, (c, p) => new {c,p})
+    //    .Join(context.ProductFeatures, x => x.p.Id, y => y.Id, (c, pf)=>new
+    //    {
+    //        CategoryName=c.c.Name,
+    //        ProductName=c.p.Name,
+    //        ProductFeature=pf.Size
+    //    }).ToList();
+
+    // Daha çok tercih edilen yöntem Okunabilirliği daha fazla
+    //var result2 = (from c in context.Categories
+    //               join p in context.Products on c.Id equals p.CategoryId
+    //               join pf in context.ProductFeatures on p.Id equals pf.Id
+    //               select new
+    //               {
+    //                   CategoryName = c.Name,
+    //                   ProductName = p.Name,
+    //                   ProductFeature = pf.Size
+    //               }).ToList();
+
+    #endregion
 
 
+    #region Left-Right - Full Outer  Join Query Syntax ile
+    // Left join ile yer değiştirerek RightJoin alabiliriz.
+    //var leftJoinResult = await (from p in context.Products
+    //                       join pf in context.ProductFeatures on p.Id equals pf.Id into pfList
+    //                       // Boş olduğunda Default'ları al yani Tüm productlar gelicek.
+    //                       from pf in pfList.DefaultIfEmpty()
+    //                       select new { Id=p.Id,Name=p.Name,Size=pf.Size }).ToListAsync();
+
+    //var rightJoinResult = await (from pf in context.ProductFeatures
+    //                       join p in context.Products on pf.Id equals p.Id into pList
+    //                       // Boş olduğunda Default'ları al yani Tüm productlar gelicek.
+    //                       from p in pList.DefaultIfEmpty()
+    //                       select new { Id=p.Id,Name=p.Name,Size=pf.Size }).ToListAsync();
+
+
+    //// Sol ve Sağ listeyi birleştirirsek "Union" ile 
+    //var outerJoin = leftJoinResult.Union(rightJoinResult);
+
+    #endregion
+
+
+    Console.WriteLine();
+
+    #endregion
+
+
+    #region Sql Raw işlemleri 
+
+    //var productFeatures = await context.ProductFeatures.FromSqlRaw("select * from ProductFeatures").ToListAsync();
+    //var unitPrice = 500;
+    ////var products = await context.Products.FromSqlInterpolated($"select * from products where UnitPrice >{unitPrice}").ToListAsync();
+
+    //// Custome Query
+
+
+    //// Kendi oluşturduğumuz ProductEssential üzerinden Product tablosundaki belirli alanları mapleyip çekiyoruz .
+    //// Eğer Product üzerinden bu alanları çekmeye kalksaydık , Barcode alanı null gelemeyeceğinden Context hata fırlatacaktı.
+    //var product = context.ProductEssentials.FromSqlRaw("Select Id,Name,UnitPrice from Products").ToListAsync();
+
+
+
+    #endregion
+
+    #region ToSqlQuery
+
+    // ToSqlQuery ModelBuilder üzerinden belirttik
+    // Where koşulunu oluşturduğumuz ToSqlQuery içindeki sorguya dahil eder
+    var products = context.ProductEssentials.Where(x => x.UnitPrice > 150).ToList();
+
+    #endregion
+
+    #region ToView çağırma
+    var productView = context.ProductView.Where(x => x.Width > 50).ToList();
+
+    // HasNoKey koyulan tüm entityler Track Edilmez -> Bu  datalar Maplenmediği için böyle bir kayıt EF Core tarafında hata vericek. View' a EF Core tarafında verieklemek sağlıklı değil
+    //context.ProductView.Add(new ProductView() { ProductName = "XTF 500", CategoryName = "Hatalı Kayıt", Height = 50, Width = 100 });
+
+    #endregion
+
+    #region Sayfalama Metotları 
+
+    // Take Metodu
+    // Skip Metodu
+
+    // ilk 3 datayı vericek. skip: 0 atla take olarak 3 ver
+
+    // page 1 , pageSize 3  -> (page-1)*pageSize)
+    // page 2 gönderirsek ilk 3 ünü atla sonraki 3 ü ver
+
+    //return context.Products.OrderByDescending(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+
+    #endregion
+
+    #region Soft Delete IsDeleted
+
+
+
+
+
+    #endregion
 
     context.SaveChanges();
 
@@ -276,6 +403,10 @@ using (var context = new AppDbContext())
 
 
 }
+
+/*}*/
+
+
 
 string FormatPhone(string phone)
 {
