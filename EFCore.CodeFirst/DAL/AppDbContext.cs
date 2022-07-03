@@ -132,7 +132,8 @@ namespace EFCore.CodeFirst.DAL
 
             //Default değeri false
             modelBuilder.Entity<Product>().Property(x => x.IsDeleted).HasDefaultValue(false);
-
+            // Where koşulunda bu IsDeleted koşulu gelecek.
+            modelBuilder.Entity<Product>().HasQueryFilter(p => p.IsDeleted == false);
 
             base.OnModelCreating(modelBuilder);
         }

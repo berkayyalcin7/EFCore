@@ -390,7 +390,9 @@ using (var context = new AppDbContext())
     #endregion
 
     #region Soft Delete IsDeleted
-
+    // OnConfiguring kısmında ayarlamalar yapıldı
+    // IgnoreQueryFilters() ile tanımlamayı iptal edebiliriz.
+    var productsWithIsDeletedFalse = context.Products.ToList();
 
 
 
