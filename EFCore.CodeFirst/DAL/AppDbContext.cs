@@ -10,8 +10,25 @@ using System.Threading.Tasks;
 
 namespace EFCore.CodeFirst.DAL
 {
+    // DbContext Default -> Scoped 
     internal class AppDbContext:DbContext
     {
+        // Dışardan bir Servis olabilir.
+        // private readonly ITenantService tService;
+
+
+        // Bu Barkod değeri dışardanda gelebilir.
+        private readonly int Barcode;
+
+        public AppDbContext(int barcode)
+        {
+            Barcode = barcode;
+        }
+        public AppDbContext()
+        {
+
+        }
+
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Student> Students { get; set; }
@@ -45,7 +62,10 @@ namespace EFCore.CodeFirst.DAL
             //Loglama ve Lazy Loading
             // Trace , Debug , Info , Warning , Error , Critical
 
-            optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information).UseLazyLoadingProxies().UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
+            optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information).UseLazyLoadingProxies()
+                .UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
+                // No Tracking olarak belirtebiliyoruz.
+                //.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         
         }
 
@@ -132,8 +152,21 @@ namespace EFCore.CodeFirst.DAL
 
             //Default değeri false
             modelBuilder.Entity<Product>().Property(x => x.IsDeleted).HasDefaultValue(false);
-            // Where koşulunda bu IsDeleted koşulu gelecek.
-            modelBuilder.Entity<Product>().HasQueryFilter(p => p.IsDeleted == false);
+
+            // default'u 0 dır.
+            // DbContext içerisine Barcode değerini gönderebiliriz.
+            if (Barcode!=default(int))
+            {
+                modelBuilder.Entity<Product>().HasQueryFilter(p => p.Barcode == Barcode);
+            }
+            else
+            {
+                // Where koşulunda bu IsDeleted koşulu gelecek.
+                modelBuilder.Entity<Product>().HasQueryFilter(p => p.IsDeleted == false);
+
+            }
+            // SQL'den gelen datayı karşılayacak olan bi Model olacak.
+            modelBuilder.Entity<ProductFull>().HasNoKey();
 
             base.OnModelCreating(modelBuilder);
         }

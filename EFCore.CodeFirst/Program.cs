@@ -16,7 +16,9 @@ DbInitializer.Build();
 //List<Product> GetProducts (int page,int pageSize)
 //{
 
-using (var context = new AppDbContext())
+
+// Barcode değeri 12345 olan kayıtlar gelicek .
+using (var context = new AppDbContext())//12345
 {
     #region State Tracking işlemleri
     //var products = await context.Products.ToListAsync();
@@ -392,10 +394,44 @@ using (var context = new AppDbContext())
     #region Soft Delete IsDeleted
     // OnConfiguring kısmında ayarlamalar yapıldı
     // IgnoreQueryFilters() ile tanımlamayı iptal edebiliriz.
-    var productsWithIsDeletedFalse = context.Products.ToList();
+    //var productsWithIsDeletedFalse = context.Products.ToList();
 
 
 
+
+    #endregion
+
+    #region Multi Tenancy
+
+
+
+    #endregion
+
+    #region Query Tags Logging
+
+    //var productsWithFeat = context.Products.TagWith("Bu Query Ürünler ve Ürünlere Bağlı Özellikleri Getirir").Include(x => x.ProductFeature).Where(x => x.UnitPrice > 50).ToList();
+
+    #endregion
+
+    #region Tracking NonTracking
+
+    //var product = context.Products.AsNoTracking().FirstOrDefault();
+    //// AsNoTracking kullandığımız için ek olarak Update metodunu kullanmamız gerekiyor.
+    //product.UnitPrice = 150;
+    //context.Update(product);
+
+
+
+
+    #endregion
+
+    #region Stored Procedure Giriş
+
+    // SP'nin Modele Map'li olması gerekiyor
+    //var spProducts = await context.Products.FromSqlRaw("exec sp_get_products").ToListAsync();
+
+    // Where Koşulu burada kullanamıyoruz. Datayı çektikten sonra Koşulları kullanabiliriz.
+    var spFull = await context.ProductFulls.FromSqlRaw("exec sp_get_product_full").ToListAsync();
 
     #endregion
 
