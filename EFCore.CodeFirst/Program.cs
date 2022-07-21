@@ -3,6 +3,7 @@
 
 using EFCore.CodeFirst;
 using EFCore.CodeFirst.DAL;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 // AppSettings json'ı okunabilecek hale getiriyor. 
@@ -431,7 +432,29 @@ using (var context = new AppDbContext())//12345
     //var spProducts = await context.Products.FromSqlRaw("exec sp_get_products").ToListAsync();
 
     // Where Koşulu burada kullanamıyoruz. Datayı çektikten sonra Koşulları kullanabiliriz.
-    var spFull = await context.ProductFulls.FromSqlRaw("exec sp_get_product_full").ToListAsync();
+    //var spFull = await context.ProductFulls.FromSqlRaw("exec sp_get_product_full").ToListAsync();
+
+    // Parametre ile SP Çağırma FromSqlInterpolated tercih edilir.
+    //var productsWithParameter = await context.ProductFulls.FromSqlInterpolated($"exec sp_get_product_full_parameters {8},{150}").ToListAsync();
+    #endregion
+
+    #region CRUD Stored Procedure İşlemleri
+    var product = new Product()
+    {
+        Name = "Intel i5 11th 11600",
+        UnitPrice = 3150,
+        Stock = 100,
+        Barcode = 13211,
+        Kdv = 1,
+        CategoryId = 9
+    };
+
+    // Geriye ProductId döneceğiz.
+    var newProductIdSql = new SqlParameter("@newId", System.Data.SqlDbType.Int);
+    newProductIdSql.Direction = System.Data.ParameterDirection.Output;
+    //context.Database.ExecuteSqlInterpolated($"exec sp_insert_products_returnProductId {product.Name},{product.UnitPrice},{product.Stock},{product.Barcode},{product.Kdv},{product.CategoryId},{newProductIdSql} out");
+    // Değeri atadık.
+    var newProductId = newProductIdSql.Value;
 
     #endregion
 
