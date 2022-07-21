@@ -166,7 +166,8 @@ namespace EFCore.CodeFirst.DAL
 
             }
             // SQL'den gelen datayı karşılayacak olan bi Model olacak.
-            modelBuilder.Entity<ProductFull>().HasNoKey();
+            // ToFunction ile SQL de yazılan fonksiyonu burada çağrıabiliriz. ToFunction için  Table dönücek ve herhangi bir parametre almayacak.
+            modelBuilder.Entity<ProductFull>().HasNoKey().ToFunction("fc_product_full");
 
             base.OnModelCreating(modelBuilder);
         }

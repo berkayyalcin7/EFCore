@@ -449,12 +449,20 @@ using (var context = new AppDbContext())//12345
         CategoryId = 9
     };
 
-    // Geriye ProductId döneceğiz.
+    // Geriye ProductId döneceğiz. bu yüzden Direction olarak Output olarak bize dönücek.
     var newProductIdSql = new SqlParameter("@newId", System.Data.SqlDbType.Int);
     newProductIdSql.Direction = System.Data.ParameterDirection.Output;
     //context.Database.ExecuteSqlInterpolated($"exec sp_insert_products_returnProductId {product.Name},{product.UnitPrice},{product.Stock},{product.Barcode},{product.Kdv},{product.CategoryId},{newProductIdSql} out");
     // Değeri atadık.
     var newProductId = newProductIdSql.Value;
+
+    #endregion
+
+    #region Tablo dönen Function 
+
+    // Fonksiyon  ToFunction() metodu içinde yer alan fonksiyonu çağrıcaktır.
+    var result = await context.ProductFulls.ToListAsync();
+
 
     #endregion
 
