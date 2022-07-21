@@ -463,6 +463,8 @@ using (var context = new AppDbContext())//12345
     // Fonksiyon  ToFunction() metodu içinde yer alan fonksiyonu çağrıcaktır.
     var result = await context.ProductFulls.ToListAsync();
 
+    int categoryId = 9;
+    var productswithFeature = context.ProductWithFeatures.FromSqlInterpolated($"select * from fc_product_full_withCategory({categoryId})").ToList();
 
     #endregion
 

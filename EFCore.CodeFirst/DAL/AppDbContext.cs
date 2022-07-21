@@ -53,6 +53,8 @@ namespace EFCore.CodeFirst.DAL
 
         public DbSet<Users> Users { get; set; }
 
+        public DbSet<ProductWithFeature> ProductWithFeatures { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Sadece Console'da bu ayarı yapıyoruz. Migrationda ConStr okuması için
