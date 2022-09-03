@@ -439,34 +439,53 @@ using (var context = new AppDbContext())//12345
     #endregion
 
     #region CRUD Stored Procedure İşlemleri
-    var product = new Product()
-    {
-        Name = "Intel i5 11th 11600",
-        UnitPrice = 3150,
-        Stock = 100,
-        Barcode = 13211,
-        Kdv = 1,
-        CategoryId = 9
-    };
+    //var product = new Product()
+    //{
+    //    Name = "Intel i5 11th 11600",
+    //    UnitPrice = 3150,
+    //    Stock = 100,
+    //    Barcode = 13211,
+    //    Kdv = 1,
+    //    CategoryId = 9
+    //};
 
     // Geriye ProductId döneceğiz. bu yüzden Direction olarak Output olarak bize dönücek.
-    var newProductIdSql = new SqlParameter("@newId", System.Data.SqlDbType.Int);
-    newProductIdSql.Direction = System.Data.ParameterDirection.Output;
+    //var newProductIdSql = new SqlParameter("@newId", System.Data.SqlDbType.Int);
+    //newProductIdSql.Direction = System.Data.ParameterDirection.Output;
     //context.Database.ExecuteSqlInterpolated($"exec sp_insert_products_returnProductId {product.Name},{product.UnitPrice},{product.Stock},{product.Barcode},{product.Kdv},{product.CategoryId},{newProductIdSql} out");
     // Değeri atadık.
-    var newProductId = newProductIdSql.Value;
+    //var newProductId = newProductIdSql.Value;
 
     #endregion
 
     #region Tablo dönen Function 
 
     // Fonksiyon  ToFunction() metodu içinde yer alan fonksiyonu çağrıcaktır.
-    var result = await context.ProductFulls.ToListAsync();
+    //var result = await context.ProductFulls.ToListAsync();
 
-    int categoryId = 9;
-    var productswithFeature = context.ProductWithFeatures.FromSqlInterpolated($"select * from fc_product_full_withCategory({categoryId})").ToList();
+    //int categoryId = 9;
+    //var productswithFeature = context.ProductWithFeatures.FromSqlInterpolated($"select * from fc_product_full_withCategory({categoryId})").ToList();
 
     #endregion
+
+    // Metodu çağırıyoruz.
+    // Functionlar'da Ef core üzerinde Where ifadeleri ile çalışıyor lakin Stored Procedurlerde bu çalışmaz.
+    var productFunc = context.GetProductWithFeatures(1).Where(x=>x.Width>100).ToList();
+
+    // Scalar Valued Function -
+    // context.GetProductCountByCategoryId bağımsız şekilde kullanamıyoruz. Bağımsız olarak kullanmak ister isek bir Modelle MAP işlemi yapmak gerekiyor.
+    var categories = context.Categories.Select(x => new
+    {
+        CategoryName=x.Name,
+        ProductCount=context.GetProductCountByCategoryId(x.Id)
+    });
+
+    // Map ile kullanma
+    var categoryId = 9;
+    // .Count olan değer count property'si , metodu değil !!!
+    // as Count property ismi ile aynı olmak zorunda.
+    var productCount = context.ProductCount.FromSqlInterpolated($"SELECT DBO.fc_product_count_scalar({categoryId}) as Count").First().Count;
+
 
     context.SaveChanges();
 

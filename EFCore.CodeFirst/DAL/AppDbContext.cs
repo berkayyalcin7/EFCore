@@ -55,6 +55,19 @@ namespace EFCore.CodeFirst.DAL
 
         public DbSet<ProductWithFeature> ProductWithFeatures { get; set; }
 
+        // Keyless Entity olarak OnModelCreating üzerinde ayarlıyoruz.
+        public DbSet<ProductCount> ProductCount { get; set; }
+
+        // lambda ' dan sonra return FromExpression . 
+        // Bir Function çağırmak istiyorsak bir metot ver.
+        public IQueryable<ProductWithFeature> GetProductWithFeatures(int categoryId) => FromExpression<ProductWithFeature>(() => GetProductWithFeatures(categoryId));
+        
+        public int GetProductCountByCategoryId(int categoryId)
+        {
+            // buradaki amaç bu metodu EF Core sadece context üzerinden dönmemize izin vermiyor.
+            throw new NotSupportedException("Bu metot EF Core tarafından çağrılmaktadır.");
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Sadece Console'da bu ayarı yapıyoruz. Migrationda ConStr okuması için
@@ -170,6 +183,19 @@ namespace EFCore.CodeFirst.DAL
             // SQL'den gelen datayı karşılayacak olan bi Model olacak.
             // ToFunction ile SQL de yazılan fonksiyonu burada çağrıabiliriz. ToFunction için  Table dönücek ve herhangi bir parametre almayacak.
             modelBuilder.Entity<ProductFull>().HasNoKey().ToFunction("fc_product_full");
+
+            
+
+            // ! işareti koyarsak Design time esnasında null olmadığını söylemek için . Runtime'da etkisi yok
+            // HasName ile kullanıcağımız Function ismi belirtebiliriz.
+            modelBuilder.HasDbFunction(typeof(AppDbContext).GetMethod(nameof(GetProductWithFeatures),new[] { typeof(int)})!)
+                .HasName("fc_product_full_withCategory");
+
+            modelBuilder.HasDbFunction(typeof(AppDbContext).GetMethod(nameof(GetProductCountByCategoryId), new[] { typeof(int) })!)
+         .HasName("fc_product_count_scalar");
+
+            // Key değeri olmadığını belirtiyoruz.
+            modelBuilder.Entity<ProductCount>().HasNoKey();
 
             base.OnModelCreating(modelBuilder);
         }
