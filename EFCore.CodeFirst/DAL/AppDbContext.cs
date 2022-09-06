@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,19 +12,26 @@ using System.Threading.Tasks;
 namespace EFCore.CodeFirst.DAL
 {
     // DbContext Default -> Scoped 
-    internal class AppDbContext:DbContext
+    internal class AppDbContext : DbContext
     {
         // Dışardan bir Servis olabilir.
         // private readonly ITenantService tService;
-
-
         // Bu Barkod değeri dışardanda gelebilir.
         private readonly int Barcode;
 
-        public AppDbContext(int barcode)
+        private DbConnection _connection;
+
+        //public AppDbContext(int barcode)
+        //{
+        //    Barcode = barcode;
+        //}
+
+
+        public AppDbContext(DbConnection connection)
         {
-            Barcode = barcode;
+            _connection = connection;
         }
+
         public AppDbContext()
         {
 
@@ -61,7 +69,7 @@ namespace EFCore.CodeFirst.DAL
         // lambda ' dan sonra return FromExpression . 
         // Bir Function çağırmak istiyorsak bir metot ver.
         public IQueryable<ProductWithFeature> GetProductWithFeatures(int categoryId) => FromExpression<ProductWithFeature>(() => GetProductWithFeatures(categoryId));
-        
+
         public int GetProductCountByCategoryId(int categoryId)
         {
             // buradaki amaç bu metodu EF Core sadece context üzerinden dönmemize izin vermiyor.
@@ -72,16 +80,29 @@ namespace EFCore.CodeFirst.DAL
         {
             // Sadece Console'da bu ayarı yapıyoruz. Migrationda ConStr okuması için
             // WorkerService'lerde bu ayarlar hazır bir şekilde geliyor.
-            DbInitializer.Build();
+            // AppSettings Json'ı yükleme işlemi
+            // Eğer connection verirsek bu alanı kullanmaya gerek kalmaz.
 
-            //Loglama ve Lazy Loading
-            // Trace , Debug , Info , Warning , Error , Critical
+            
+            if (_connection == default(DbConnection))
+            {
+                DbInitializer.Build();
+                optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information).UseLazyLoadingProxies()
+     .UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
 
-            optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information).UseLazyLoadingProxies()
-                .UseSqlServer(DbInitializer.Configuration.GetConnectionString("SqlCon"));
+            }
+            else
+            {
+                //Loglama ve Lazy Loading
+                // Trace , Debug , Info , Warning , Error , Critical
+                optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information).UseLazyLoadingProxies()
+                      .UseSqlServer(_connection);
                 // No Tracking olarak belirtebiliyoruz.
                 //.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-        
+            }
+
+
+
         }
 
         // SaveChange çağrılmadan önce CreatedDate otomatik olarak oluşsun.
@@ -127,8 +148,9 @@ namespace EFCore.CodeFirst.DAL
             //    x=>x.HasOne<Student>().WithMany().HasForeignKey("StudentId").HasConstraintName("FK__StudentId")
             //    );
 
+
             // Category silindiğinde ürünlerde silinecek.
-            modelBuilder.Entity<Category>().HasMany(x=>x.Products).WithOne(x=>x.Category).HasForeignKey(x=>x.CategoryId)
+            modelBuilder.Entity<Category>().HasMany(x => x.Products).WithOne(x => x.Category).HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // UnitPrice ve KDV alanını çarp TotalPrice'a yaz. 
@@ -150,10 +172,10 @@ namespace EFCore.CodeFirst.DAL
             // Include dediğimizde Index tablosunda UnitPrice ve Stock datasını da tutacak. Sorgulama performansı arttırıyor .
             // Disk alanı maliyetini arttırır.
 
-            modelBuilder.Entity<Product>().HasIndex(x => x.Name).IncludeProperties(x=> new { x.UnitPrice,x.Stock });
+            modelBuilder.Entity<Product>().HasIndex(x => x.Name).IncludeProperties(x => new { x.UnitPrice, x.Stock });
 
             // Kısıtlamalar -> Örnek olarak
-            modelBuilder.Entity<Product>().HasCheckConstraint("DateCheck","[CreatedDate]>[LastAccessDate]");
+            modelBuilder.Entity<Product>().HasCheckConstraint("DateCheck", "[CreatedDate]>[LastAccessDate]");
 
             // Keyless Entity
 
@@ -170,7 +192,7 @@ namespace EFCore.CodeFirst.DAL
 
             // default'u 0 dır.
             // DbContext içerisine Barcode değerini gönderebiliriz.
-            if (Barcode!=default(int))
+            if (Barcode != default(int))
             {
                 modelBuilder.Entity<Product>().HasQueryFilter(p => p.Barcode == Barcode);
             }
@@ -184,11 +206,11 @@ namespace EFCore.CodeFirst.DAL
             // ToFunction ile SQL de yazılan fonksiyonu burada çağrıabiliriz. ToFunction için  Table dönücek ve herhangi bir parametre almayacak.
             modelBuilder.Entity<ProductFull>().HasNoKey().ToFunction("fc_product_full");
 
-            
+
 
             // ! işareti koyarsak Design time esnasında null olmadığını söylemek için . Runtime'da etkisi yok
             // HasName ile kullanıcağımız Function ismi belirtebiliriz.
-            modelBuilder.HasDbFunction(typeof(AppDbContext).GetMethod(nameof(GetProductWithFeatures),new[] { typeof(int)})!)
+            modelBuilder.HasDbFunction(typeof(AppDbContext).GetMethod(nameof(GetProductWithFeatures), new[] { typeof(int) })!)
                 .HasName("fc_product_full_withCategory");
 
             modelBuilder.HasDbFunction(typeof(AppDbContext).GetMethod(nameof(GetProductCountByCategoryId), new[] { typeof(int) })!)

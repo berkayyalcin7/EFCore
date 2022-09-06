@@ -1,13 +1,21 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
+using AutoMapper.QueryableExtensions;
 using EFCore.CodeFirst;
 using EFCore.CodeFirst.DAL;
+using EFCore.CodeFirst.DTOs;
+using EFCore.CodeFirst.Mapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 
 // AppSettings json'ı okunabilecek hale getiriyor. 
 DbInitializer.Build();
+
+// SqlConnection -> DbConnection'dan miras aldığı için tanımlayıp Context'in içerisinde geçebiliyoruz.
+var connection = new SqlConnection(DbInitializer.Configuration.GetConnectionString("SqlCon"));
 
 //GetProducts(1, 1).ForEach(x =>
 //{
@@ -18,8 +26,10 @@ DbInitializer.Build();
 //{
 
 
-// Barcode değeri 12345 olan kayıtlar gelicek .
-using (var context = new AppDbContext())//12345
+// Barcode değeri 12345 olan kayıtlar gelicek.
+// Ctor tekrar güncellendi üstteki satır silindi
+
+using (var context = new AppDbContext(connection))
 {
     #region State Tracking işlemleri
     //var products = await context.Products.ToListAsync();
@@ -91,7 +101,6 @@ using (var context = new AppDbContext())//12345
 
     #endregion
 
-
     #region Change Tracker , Update 
     // Memory'de erişilen datalara değişiklik için ChangeTracker kullanırız.
 
@@ -129,7 +138,7 @@ using (var context = new AppDbContext())//12345
 
     #endregion
 
-
+    #region Insert 
     //var category = new Category() { Name = "Araç Gereçler" };
 
     //var newProduct = new Product() { Name = "Kalem 1", UnitPrice = 100, Stock = 300, Barcode = 123,
@@ -140,6 +149,8 @@ using (var context = new AppDbContext())//12345
     //}};
 
     //context.Add(newProduct);
+    #endregion
+
     #region One to One
     // Product - > Parent
     // ProductFeature -> Child nesne
@@ -261,7 +272,6 @@ using (var context = new AppDbContext())//12345
     //join Categories c on p.CategoryId=c.Id").ToList();
     #endregion
 
-
     #region Client vs Server Evelatuion
     //context.Users.Add(new Users() { Phone = "05385282234" });
     //context.Users.Add(new Users() { Phone = "05396586136" });
@@ -317,7 +327,6 @@ using (var context = new AppDbContext())//12345
 
     #endregion
 
-
     #region Left-Right - Full Outer  Join Query Syntax ile
     // Left join ile yer değiştirerek RightJoin alabiliriz.
     //var leftJoinResult = await (from p in context.Products
@@ -337,12 +346,7 @@ using (var context = new AppDbContext())//12345
     //var outerJoin = leftJoinResult.Union(rightJoinResult);
 
     #endregion
-
-
-    Console.WriteLine();
-
     #endregion
-
 
     #region Sql Raw işlemleri 
 
@@ -404,7 +408,7 @@ using (var context = new AppDbContext())//12345
 
     #region Multi Tenancy
 
-
+    // AppDBContext içerisinde anlatıldı.
 
     #endregion
 
@@ -468,16 +472,17 @@ using (var context = new AppDbContext())//12345
 
     #endregion
 
+    #region Scalar Valued Functionlar
     // Metodu çağırıyoruz.
     // Functionlar'da Ef core üzerinde Where ifadeleri ile çalışıyor lakin Stored Procedurlerde bu çalışmaz.
-    var productFunc = context.GetProductWithFeatures(1).Where(x=>x.Width>100).ToList();
+    var productFunc = context.GetProductWithFeatures(1).Where(x => x.Width > 100).ToList();
 
     // Scalar Valued Function -
     // context.GetProductCountByCategoryId bağımsız şekilde kullanamıyoruz. Bağımsız olarak kullanmak ister isek bir Modelle MAP işlemi yapmak gerekiyor.
     var categories = context.Categories.Select(x => new
     {
-        CategoryName=x.Name,
-        ProductCount=context.GetProductCountByCategoryId(x.Id)
+        CategoryName = x.Name,
+        ProductCount = context.GetProductCountByCategoryId(x.Id)
     });
 
     // Map ile kullanma
@@ -486,8 +491,118 @@ using (var context = new AppDbContext())//12345
     // as Count property ismi ile aynı olmak zorunda.
     var productCount = context.ProductCount.FromSqlInterpolated($"SELECT DBO.fc_product_count_scalar({categoryId}) as Count").First().Count;
 
+    #endregion
 
-    context.SaveChanges();
+    #region Anonymous Type'lar
+
+
+    // Eğer Select ifadesini kullanıyorsak Include ifadelerini yazmamıza gerek yok . Ama Navigation Propertyler olmak zorunda.
+    //var productsAnonymous = context.Products.Select(x => new
+    //{
+    //    CategoryName=x.Category.Name,
+    //    ProductName=x.Name,
+    //    ProductPrice=x.UnitPrice,
+    //    width=(int?)x.ProductFeature.Width
+    //}).Where(x=>x.width > 50).ToList();
+
+
+
+
+    #endregion
+
+    #region DTO (Console) / ViewModel (ASP tarafı)
+
+    // DTO ile tanımlanması burada AutoMapper kullanmadık.
+    //var productDTO = context.Products.Select(x => new ProductDto
+    //{
+    //    CategoryName = x.Category.Name,
+    //    ProductName = x.Name,
+    //    ProductPrice = x.UnitPrice,
+    //    Width = (int?)x.ProductFeature.Width
+    //}).Where(x => x.Width > 50).ToList();
+
+
+
+    //var productList = context.Products.ToList();
+
+    //  ProductMapper DTO'ya mapledik.
+    //  Sadece MapperDTO içinde olan propertyleri alır. Ama Tüm datayı çektikten sonra DTO'ya çevirdik.
+    //var productMap= ObjectMapper.Mapper.Map<List<ProductMapperDto>>(productList);
+
+
+    // !!! Bunu kullanmak daha mantıklı
+    // ProjectTo'ya direkt bir DTO vereceğiz otomatik olarak , hangi propertyler varsa onları vericek.
+    // Tüm data yerine sadece olan dataları getirir. Ek olarak Where koşulunu kullanabiliriz.
+    var projectDto = context.Products.ProjectTo<ProductMapperDto>(ObjectMapper.Mapper.ConfigurationProvider).Where(x => x.UnitPrice > 50).ToList();
+
+
+
+
+
+
+    #endregion
+
+    #region Transaction Mantığı
+
+    // SaveChanges transaction yapısı -> 1 ' den fazla SaveChanges'i aynı yerde kullanıyorsak Transaction yapısını elle yazmamız gerekiyor
+    // Burada 1 tanesi yansımasa dahi EF Core tarafında tüm işlem geri alınıyor.
+    // Loglama veya özel bir işlem olmayacaksa Try catch içerisine alınmasına gerek yok.
+    using (var transaction = context.Database.BeginTransaction())
+    {
+        var categoryTransact = new Category { Name = "Telefonlar" };
+
+        context.Categories.Add(categoryTransact);
+
+        context.SaveChanges();
+
+        var product = context.Products.First();
+
+        var newProduct = new Product
+        {
+            Name = "Iphone 11",
+            // Yukarıda tanımlı kategorinin Id'sini kullanıyoruz. Lakin Yukarıdaki Kategori SaveChangeso olmadan Id Değeri gelmez
+            // Bunun yerine Navigation Property'si ile yukarıdaki categoryTransact'i verebiliriz.
+            //CategoryId = categoryTransact.Id,
+            CategoryId = 999,
+            UnitPrice = 990,
+            Kdv = 1,
+            Barcode = 1234,
+            Stock = 200
+
+        };
+
+        product.Name = "Updated Data 123";
+        // DB'de olmayan bir Id veriyoruz.
+        product.CategoryId = 20;
+        // EF Core 2 değişikliği tek bir çağrı ile gönderiyor ,
+        // 2 işlemden birinde hata meydana geldiyse EF Core Rollback işlemine dönüyor
+        // 1 metodun içinde birden fazla SaveChanges kullanılırsa Transaction'u açık açık belirtmek gerekiyor.
+        context.SaveChanges();
+
+        // 2 ayrı context'te Transaction kullanma
+        // Bu farklı bir DB'de olabilir.
+        using (var dbContext2 = new AppDbContext(connection))
+        {
+            // üstteki Transaction'ı kullanıyoruz . 
+            // Transaction using blokları içindeyse using bloğu bittiğinde Transaction Dispose olur . yani farklı Contextleri Using Transaction blokları içerisinde kullanmak daha mantıklı. 
+            dbContext2.Database.UseTransaction(transaction.GetDbTransaction());
+        }
+
+
+
+        transaction.Commit();
+    }
+
+
+
+
+
+    #endregion
+
+
+
+
+
 
 
 
