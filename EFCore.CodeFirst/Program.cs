@@ -600,7 +600,26 @@ using (var context = new AppDbContext(connection))
     #endregion
 
 
+    #region Isolation
 
+    // Read Uncommitted : Commit edilmemiş ama güncellenecek datayı diğer transaction ile okuyabiliriz.
+    // Uncommit transaction Update-Delete- işlemleri yaparken başka bir transaction aynı satırda güncelleme yapamaz . Select Insert vs işlemler yapabilir.
+    using (var transactionIso = context.Database.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted))
+    {
+        var productIsoUpdate = context.Products.First();
+
+        productIsoUpdate.UnitPrice = 500;
+
+        context.SaveChanges();
+
+        // Burada okuma işlemi yaparsak 500 değerini okuyabilir . Okuma Yapan Yerin ReadUncomitted olarak ayarlı olması gerekiyor.
+
+        transactionIso.Commit();
+    }
+
+    
+
+    #endregion
 
 
 
