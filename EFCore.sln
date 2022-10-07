@@ -5,7 +5,9 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfCore.DbFirst", "EfCore.DbFirst\EfCore.DbFirst.csproj", "{6A503154-C523-434F-971D-D1A37F669408}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore.CodeFirst", "EFCore.CodeFirst\EFCore.CodeFirst.csproj", "{6C0ACDBC-E63D-4EF7-BF1D-AAF42E5DFB4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFCore.CodeFirst", "EFCore.CodeFirst\EFCore.CodeFirst.csproj", "{6C0ACDBC-E63D-4EF7-BF1D-AAF42E5DFB4E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCoreConcurrency.WEB", "EFCoreConcurrency.WEB\EFCoreConcurrency.WEB.csproj", "{107BCC29-6AF0-4147-8CAB-D62FC614B759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{6C0ACDBC-E63D-4EF7-BF1D-AAF42E5DFB4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C0ACDBC-E63D-4EF7-BF1D-AAF42E5DFB4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C0ACDBC-E63D-4EF7-BF1D-AAF42E5DFB4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{107BCC29-6AF0-4147-8CAB-D62FC614B759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{107BCC29-6AF0-4147-8CAB-D62FC614B759}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{107BCC29-6AF0-4147-8CAB-D62FC614B759}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{107BCC29-6AF0-4147-8CAB-D62FC614B759}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
